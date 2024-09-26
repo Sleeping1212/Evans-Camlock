@@ -6,7 +6,8 @@ local CamlockState = false
 local Prediction = 0.24664 -- Default Prediction
 local HorizontalPrediction = 0.24664
 local VerticalPrediction = 0.14
-local Smoothness = 0.85 -- Added smoothness factor for Triggerbot
+local Smoothness = 0.85 -- Smoothness for Camlock only
+local TriggerbotSpeed = 1.5 -- New triggerbot enhancement factor
 
 local Locked = true
 getgenv().Key = "q"
@@ -95,7 +96,7 @@ RunService.Heartbeat:Connect(function()
         local camera = workspace.CurrentCamera
         local targetPosition = enemy.Position + enemy.Velocity * Prediction
 
-        -- Triggerbot: If the camera is not looking at the target, adjust it smoothly
+        -- Camlock: Smoothly move camera towards target
         local camDirection = (targetPosition - camera.CFrame.Position).unit
         local currentDirection = camera.CFrame.LookVector.unit
         local directionDifference = camDirection:Dot(currentDirection)
@@ -121,6 +122,14 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
+-- Triggerbot logic (Enhanced speed)
+RunService.RenderStepped:Connect(function()
+    if CamlockState and enemy then
+        -- Directly aim at the target (no smoothness for Triggerbot)
+        workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, enemy.Position + enemy.Velocity * Prediction)
+    end
+end)
+
 Mouse.KeyDown:Connect(function(k)
     if k == getgenv().Key then
         Locked = not Locked
@@ -129,9 +138,11 @@ Mouse.KeyDown:Connect(function(k)
             CamlockState = true
             if enemy then
                 dot = CreateDot(enemy)
+                -- Get Display Name
+                local displayName = enemy.Parent.DisplayName or enemy.Parent.Name
                 game.StarterGui:SetCore("SendNotification", {
                     Title = "Locked On",
-                    Text = "Locked onto: " .. enemy.Parent.Name,
+                    Text = "Locked onto: " .. displayName,
                     Duration = 2
                 })
             end
@@ -180,9 +191,10 @@ TextButton.MouseButton1Click:Connect(function()
         enemy = FindNearestEnemy()
         if enemy then
             dot = CreateDot(enemy)
+            local displayName = enemy.Parent.DisplayName or enemy.Parent.Name
             game.StarterGui:SetCore("SendNotification", {
                 Title = "Locked On",
-                Text = "Locked onto: " .. enemy.Parent.Name,
+                Text = "Locked onto: " .. displayName,
                 Duration = 2
             })
         end
