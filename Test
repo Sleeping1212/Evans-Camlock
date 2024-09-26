@@ -1,197 +1,211 @@
-getgenv().Prediction = 0.129 
-getgenv().AimPart = "HumanoidRootPart"	
-getgenv().Key = "c"	
-getgenv().DisableKey = "P"	
- 
-getgenv().FOV = true	
-getgenv().ShowFOV = false	
-getgenv().FOVSize = 55	
- 
---// Variables (Service)	
- 
-local Players = game:GetService("Players")	
-local RS = game:GetService("RunService")	
-local WS = game:GetService("Workspace")	
-local GS = game:GetService("GuiService")	
-local SG = game:GetService("StarterGui")	
- 
---// Variables (regular)	
- 
-local LP = Players.LocalPlayer	
-local Mouse = LP:GetMouse()	
-local Camera = WS.CurrentCamera	
-local GetGuiInset = GS.GetGuiInset	
- 
-local AimlockState = true	
-local Locked	
-local Victim	
- 
-local SelectedKey = getgenv().Key	
-local SelectedDisableKey = getgenv().DisableKey	
- 
---// Notification function	
- 
-function Notify(tx)	
-    SG:SetCore("SendNotification", {	
-        Title = "Evan's Camlock",	
-        Text = tx,	
-Duration = 5	
-    })	
-end	
- 
---// Check if aimlock is loaded	
- 
-if getgenv().Loaded == true then	
-    Notify("Aimlock is already loaded!")	
-    return	
-end	
- 
-getgenv().Loaded = true	
- 
---// FOV Circle	
- 
-local fov = Drawing.new("Circle")	
-fov.Filled = false	
-fov.Transparency = 1	
-fov.Thickness = 1	
-fov.Color = Color3.fromRGB(255, 255, 0)	
-fov.NumSides = 1000	
- 
---// Functions	
- 
-function update()	
-    if getgenv().FOV == true then	
-        if fov then	
-fov.Radius = getgenv().FOVSize * 2	
-            fov.Visible = getgenv().ShowFOV	
-fov.Position = Vector2.new(Mouse.X, Mouse.Y + GetGuiInset(GS).Y)	
- 
-            return fov	
-        end	
-    end	
-end	
- 
-function WTVP(arg)	
-    return Camera:WorldToViewportPoint(arg)	
-end	
- 
-function WTSP(arg)	
-    return Camera.WorldToScreenPoint(Camera, arg)	
-end	
- 
-function getClosest()	
-    local closestPlayer	
-    local shortestDistance = math.huge	
- 
-    for i, v in pairs(game.Players:GetPlayers()) do	
-        local notKO = v.Character:WaitForChild("BodyEffects")["K.O"].Value ~= true	
-        local notGrabbed = v.Character:FindFirstChild("GRABBING_COINSTRAINT") == nil	
- 
-if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 and v.Character:FindFirstChild(getgenv().AimPart) and notKO and notGrabbed then	
-            local pos = Camera:WorldToViewportPoint(v.Character.PrimaryPart.Position)	
-local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude	
- 
-            if (getgenv().FOV) then	
-                if (fov.Radius > magnitude and magnitude < shortestDistance) then	
-                    closestPlayer = v	
-                    shortestDistance = magnitude	
-                end	
-            else	
-                if (magnitude < shortestDistance) then	
-                    closestPlayer = v	
-                    shortestDistance = magnitude	
-                end	
-            end	
-        end	
-    end	
-    return closestPlayer	
-end	
- 
---// Checks if key is down	
- 
-Mouse.KeyDown:Connect(function(k)	
-    SelectedKey = SelectedKey:lower()	
-    SelectedDisableKey = SelectedDisableKey:lower()	
-    if k == SelectedKey then	
-        if AimlockState == true then	
-            Locked = not Locked	
-            if Locked then	
-                Victim = getClosest()	
- 
-                Notify("Locked onto: "..tostring(Victim.Character.Humanoid.DisplayName))	
-            else	
-                if Victim ~= nil then	
-                    Victim = nil	
- 
-                    Notify("Unlocked!")	
-                end	
-            end	
-        else	
-            Notify("Aimlock is not enabled!")	
-        end	
-    end	
-    if k == SelectedDisableKey then	
-        AimlockState = not AimlockState	
-    end	
-end)	
- 
---// Loop update FOV and loop camera lock onto target	
- 
-RS.RenderStepped:Connect(function()	
-    update()	
-    if AimlockState == true then	
-        if Victim ~= nil then	
-            Camera.CFrame = CFrame.new(Camera.CFrame.p, Victim.Character[getgenv().AimPart].Position + Victim.Character[getgenv().AimPart].Velocity*getgenv().Prediction)	
-        end	
-    end	
-end)	
-	while wait() do
-        if getgenv().AutoPrediction == true then	
-        local pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()	
-        local split = string.split(pingvalue,'(')	
-local ping = tonumber(split[1])	
-if ping < 225 then	
-getgenv().Prediction = 1.4	
-elseif ping < 215 then	
-getgenv().Prediction = 1.2	
-	elseif ping < 205 then
-getgenv().Prediction = 1.0	
-	elseif ping < 190 then
-getgenv().Prediction = 0.10	
-elseif ping < 180 then	
-getgenv().Prediction = 0.12	
-	elseif ping < 170 then
-getgenv().Prediction = 0.15	
-	elseif ping < 160 then
-getgenv().Prediction = 0.18	
-	elseif ping < 150 then
-getgenv().Prediction = 0.110	
-elseif ping < 140 then	
-getgenv().Prediction = 0.113	
-elseif ping < 130 then	
-getgenv().Prediction = 0.116	
-elseif ping < 120 then	
-getgenv().Prediction = 0.120	
-elseif ping < 110 then	
-getgenv().Prediction = 0.124	
-elseif ping < 105 then	
-getgenv().Prediction = 0.127	
-elseif ping < 90 then	
-getgenv().Prediction = 0.130	
-elseif ping < 80 then	
-getgenv().Prediction = 0.133	
-elseif ping < 70 then	
-getgenv().Prediction = 0.136	
-elseif ping < 60 then	
-getgenv().Prediction = 0.140	
-elseif ping < 50 then	
-getgenv().Prediction = 0.143	
-elseif ping < 40 then	
-getgenv().Prediction = 0.145	
-elseif ping < 30 then	
-getgenv().Prediction = 0.155	
-elseif ping < 20 then	
-getgenv().Prediction = 0.157	
-        end	
-        end	
-	end
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local CamlockState = false
+local Prediction = 0.24664 -- Default Prediction
+local HorizontalPrediction = 0.24664
+local VerticalPrediction = 0.14
+local Smoothness = 0.85 -- Added smoothness factor for Triggerbot
+
+local Locked = true
+getgenv().Key = "q"
+
+-- Create Dot on Target
+local function CreateDot(target)
+    local dot = Instance.new("Part")
+    dot.Name = "TargetDot"
+    dot.Shape = Enum.PartType.Ball
+    dot.Size = Vector3.new(0.8, 0.8, 0.8)
+    dot.Color = Color3.fromRGB(255, 0, 0)
+    dot.Transparency = 0.4
+    dot.Anchored = true
+    dot.CanCollide = false
+    dot.Parent = workspace
+    return dot
+end
+
+-- Auto-prediction based on ping
+local function GetPredictionValue()
+    local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+    if ping < 10 then
+        return 0.085
+    elseif ping < 20 then
+        return 0.112
+    elseif ping < 30 then
+        return 0.113
+    elseif ping < 40 then
+        return 0.1325
+    elseif ping < 50 then
+        return 0.125
+    elseif ping < 60 then
+        return 0.12731
+    elseif ping < 70 then
+        return 0.142
+    elseif ping < 80 then
+        return 0.142
+    elseif ping < 90 then
+        return 0.1482
+    elseif ping < 105 then
+        return 0.15
+    elseif ping < 110 then
+        return 0.15
+    elseif ping < 125 then
+        return 0.16
+    elseif ping < 130 then
+        return 0.150
+    else
+        return 0.24664 -- Default prediction
+    end
+end
+
+-- Find the nearest enemy function
+function FindNearestEnemy()
+    local ClosestDistance, ClosestPlayer = math.huge, nil
+    local CenterPosition = workspace.CurrentCamera.ViewportSize / 2
+
+    for _, Player in ipairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer then
+            local Character = Player.Character
+            if Character and Character:FindFirstChild("HumanoidRootPart") and Character.Humanoid.Health > 0 then
+                local Position, IsVisibleOnViewport =
+                    workspace.CurrentCamera:WorldToViewportPoint(Character.HumanoidRootPart.Position)
+
+                if IsVisibleOnViewport then
+                    local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
+                    if Distance < ClosestDistance then
+                        ClosestPlayer = Character.HumanoidRootPart
+                        ClosestDistance = Distance
+                    end
+                end
+            end
+        end
+    end
+
+    return ClosestPlayer
+end
+
+local enemy = nil
+local dot = nil
+
+-- Aim Assist, Silent Aim, and Camlock function
+RunService.Heartbeat:Connect(function()
+    Prediction = GetPredictionValue() -- Update prediction based on ping
+    if CamlockState and enemy then
+        local camera = workspace.CurrentCamera
+        local targetPosition = enemy.Position + enemy.Velocity * Prediction
+
+        -- Triggerbot: If the camera is not looking at the target, adjust it smoothly
+        local camDirection = (targetPosition - camera.CFrame.Position).unit
+        local currentDirection = camera.CFrame.LookVector.unit
+        local directionDifference = camDirection:Dot(currentDirection)
+
+        if directionDifference < 0.99 then -- Small threshold for smoothness
+            local lerpedDirection = currentDirection:Lerp(camDirection, Smoothness)
+            camera.CFrame = CFrame.new(camera.CFrame.Position, camera.CFrame.Position + lerpedDirection)
+        else
+            camera.CFrame = CFrame.new(camera.CFrame.Position, targetPosition)
+        end
+
+        -- Random offset for Horizontal and Vertical Predictions
+        if Locked then
+            local offsetX = math.random(-1, 1) * HorizontalPrediction
+            local offsetY = math.random(-1, 1) * VerticalPrediction
+            camera.CFrame = camera.CFrame * CFrame.Angles(0, math.rad(offsetX), 0)
+            camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(offsetY), 0, 0)
+        end
+
+        if dot then
+            dot.Position = enemy.Position
+        end
+    end
+end)
+
+Mouse.KeyDown:Connect(function(k)
+    if k == getgenv().Key then
+        Locked = not Locked
+        if Locked then
+            enemy = FindNearestEnemy()
+            CamlockState = true
+            if enemy then
+                dot = CreateDot(enemy)
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Locked On",
+                    Text = "Locked onto: " .. enemy.Parent.Name,
+                    Duration = 2
+                })
+            end
+        else
+            enemy = nil
+            CamlockState = false
+            if dot then
+                dot:Destroy()
+                dot = nil
+            end
+        end
+    end
+end)
+
+-- Button UI
+local Camlock = Instance.new("ScreenGui")
+Camlock.Name = "Camlock"
+Camlock.Parent = game.CoreGui
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 202, 0, 70)
+Frame.Position = UDim2.new(0.5, -101, 0.5, -35) -- Centered on screen
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = Camlock
+
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = Frame
+
+local TextButton = Instance.new("TextButton")
+TextButton.Size = UDim2.new(0, 170, 0, 44)
+TextButton.Position = UDim2.new(0.079, 0, 0.185, 0)
+TextButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+TextButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextButton.TextScaled = true
+TextButton.Text = "Toggle CamLock"
+TextButton.Parent = Frame
+
+local state = true
+TextButton.MouseButton1Click:Connect(function()
+    state = not state
+    if state then
+        TextButton.Text = "Camlock ON"
+        CamlockState = true
+        enemy = FindNearestEnemy()
+        if enemy then
+            dot = CreateDot(enemy)
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Locked On",
+                Text = "Locked onto: " .. enemy.Parent.Name,
+                Duration = 2
+            })
+        end
+    else
+        TextButton.Text = "Camlock OFF"
+        CamlockState = false
+        enemy = nil
+        if dot then
+            dot:Destroy()
+            dot = nil
+        end
+    end
+end)
+
+-- Load and error logging
+local function main()
+    local success, err = pcall(function()
+        print("Camlock has loaded successfully")
+    end)
+
+    if not success then
+        warn("Error loading Camlock: " .. err)
+    end
+end
+
+main()
