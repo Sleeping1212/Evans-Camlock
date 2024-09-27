@@ -3,29 +3,39 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local CamlockState = false
-local Prediction = 0.14664 -- Updated Default Prediction
-local HorizontalPrediction = 0.14664 -- Updated Horizontal Prediction
-local VerticalPrediction = 0.07 -- Updated Vertical Prediction
-local XPrediction = 0.14664 -- Updated X Prediction
-local YPrediction = 0.07 -- Updated Y Prediction
-local Smoothness = 0.9 -- Updated Smoothness for Camlock
-local TriggerbotSpeed = 2 -- Optimized triggerbot speed for enhanced performance
+local Prediction = 0.14664 -- Updated Prediction
+local HorizontalPrediction = 0.14664
+local VerticalPrediction = 0.07
+local XPrediction = 0.14664
+local YPrediction = 0.07
+local Smoothness = 0.9 -- Updated smoothness for Camlock
+local TriggerbotSpeed = 100 -- Max triggerbot speed
 
 local Locked = true
 getgenv().Key = "q"
+local CameraShakeAmount = 1 -- Shakiness factor for the camera
 
--- Create Dot on Target
-local function CreateDot(target)
-    local dot = Instance.new("Part")
-    dot.Name = "TargetDot"
-    dot.Shape = Enum.PartType.Ball
-    dot.Size = Vector3.new(0.8, 0.8, 0.8)
-    dot.Color = Color3.fromRGB(255, 0, 0)
-    dot.Transparency = 0.4
-    dot.Anchored = true
-    dot.CanCollide = false
-    dot.Parent = workspace
-    return dot
+-- Create Forcefield (ESP) on Target
+local function CreateForcefield(target)
+    for _, part in ipairs(target:GetChildren()) do
+        if part:IsA("BasePart") then
+            local forcefield = Instance.new("ForceField")
+            forcefield.Visible = true
+            forcefield.Parent = part
+            part.Material = Enum.Material.ForceField
+            part.Color = Color3.fromRGB(0, 0, 255) -- Dark blue outline
+            part.Transparency = 0.7 -- Slightly transparent blue inside
+        end
+    end
+end
+
+-- Remove Forcefield from Target
+local function RemoveForcefield(target)
+    for _, part in ipairs(target:GetChildren()) do
+        if part:IsA("BasePart") and part:FindFirstChildOfClass("ForceField") then
+            part.ForceField:Destroy()
+        end
+    end
 end
 
 -- Auto-prediction based on ping
@@ -58,7 +68,7 @@ local function GetPredictionValue()
     elseif ping < 130 then
         return 0.150
     else
-        return 0.14664 -- Updated Default Prediction
+        return Prediction -- Use the new default prediction value
     end
 end
 
@@ -77,7 +87,7 @@ function FindNearestEnemy()
                 if IsVisibleOnViewport then
                     local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
                     if Distance < ClosestDistance then
-                        ClosestPlayer = Character.HumanoidRootPart
+                        ClosestPlayer = Character
                         ClosestDistance = Distance
                     end
                 end
@@ -89,14 +99,13 @@ function FindNearestEnemy()
 end
 
 local enemy = nil
-local dot = nil
 
 -- Aim Assist, Silent Aim, and Camlock function
 RunService.Heartbeat:Connect(function()
     Prediction = GetPredictionValue() -- Update prediction based on ping
     if CamlockState and enemy then
         local camera = workspace.CurrentCamera
-        local targetPosition = enemy.Position + enemy.Velocity * Prediction
+        local targetPosition = enemy.HumanoidRootPart.Position + enemy.HumanoidRootPart.Velocity * Prediction
 
         -- Camlock: Smoothly move camera towards target
         local camDirection = (targetPosition - camera.CFrame.Position).unit
@@ -118,17 +127,18 @@ RunService.Heartbeat:Connect(function()
             camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(offsetY), 0, 0)
         end
 
-        if dot then
-            dot.Position = enemy.Position
-        end
+        -- Add camera shakiness
+        local shakeX = math.random(-CameraShakeAmount, CameraShakeAmount) / 100
+        local shakeY = math.random(-CameraShakeAmount, CameraShakeAmount) / 100
+        camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(shakeX), math.rad(shakeY), 0)
     end
 end)
 
--- Triggerbot logic (Enhanced speed)
+-- Triggerbot logic (Best speed and accuracy)
 RunService.RenderStepped:Connect(function()
     if CamlockState and enemy then
-        -- Directly aim at the target (no smoothness for Triggerbot)
-        workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, enemy.Position + enemy.Velocity * Prediction)
+        -- Best Triggerbot Speed: Directly aim at the target's HumanoidRootPart
+        workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, enemy.HumanoidRootPart.Position + enemy.HumanoidRootPart.Velocity * Prediction)
     end
 end)
 
@@ -139,9 +149,9 @@ Mouse.KeyDown:Connect(function(k)
             enemy = FindNearestEnemy()
             CamlockState = true
             if enemy then
-                dot = CreateDot(enemy)
-                -- Get Display Name
-                local displayName = enemy.Parent.DisplayName or enemy.Parent.Name
+                CreateForcefield(enemy) -- Use Forcefield for ESP effect
+                -- Get Display Name safely, fall back to username if unavailable
+                local displayName = enemy.Parent:FindFirstChild("DisplayName") and enemy.Parent.DisplayName or enemy.Parent.Name
                 game.StarterGui:SetCore("SendNotification", {
                     Title = "Locked On",
                     Text = "Locked onto: " .. displayName,
@@ -149,12 +159,9 @@ Mouse.KeyDown:Connect(function(k)
                 })
             end
         else
+            RemoveForcefield(enemy) -- Remove the Forcefield ESP when unlocked
             enemy = nil
             CamlockState = false
-            if dot then
-                dot:Destroy()
-                dot = nil
-            end
         end
     end
 end)
@@ -192,8 +199,8 @@ TextButton.MouseButton1Click:Connect(function()
         CamlockState = true
         enemy = FindNearestEnemy()
         if enemy then
-            dot = CreateDot(enemy)
-            local displayName = enemy.Parent.DisplayName or enemy.Parent.Name
+            CreateForcefield(enemy)
+            local displayName = enemy.Parent:FindFirstChild("DisplayName") and enemy.Parent.DisplayName or enemy.Parent.Name
             game.StarterGui:SetCore("SendNotification", {
                 Title = "Locked On",
                 Text = "Locked onto: " .. displayName,
