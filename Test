@@ -15,25 +15,25 @@ local Locked = true
 getgenv().Key = "q"
 local CameraShakeAmount = 1 -- Shakiness factor for the camera
 
--- Create Forcefield (ESP) on Target
-local function CreateForcefield(target)
+-- Create an Outline around the Target's Avatar
+local function CreateOutline(target)
     for _, part in ipairs(target:GetChildren()) do
         if part:IsA("BasePart") then
-            local forcefield = Instance.new("ForceField")
-            forcefield.Visible = true
-            forcefield.Parent = part
-            part.Material = Enum.Material.ForceField
-            part.Color = Color3.fromRGB(0, 0, 255) -- Dark blue outline
-            part.Transparency = 0.7 -- Slightly transparent blue inside
+            local outline = Instance.new("SelectionBox")
+            outline.Adornee = part
+            outline.LineThickness = 0.1 -- Thin outline
+            outline.Color3 = Color3.fromRGB(0, 0, 255) -- Dark blue outline
+            outline.Transparency = 0.3 -- Slightly transparent inside
+            outline.Parent = part
         end
     end
 end
 
--- Remove Forcefield from Target
-local function RemoveForcefield(target)
+-- Remove Outline from Target's Avatar
+local function RemoveOutline(target)
     for _, part in ipairs(target:GetChildren()) do
-        if part:IsA("BasePart") and part:FindFirstChildOfClass("ForceField") then
-            part.ForceField:Destroy()
+        if part:IsA("BasePart") and part:FindFirstChildOfClass("SelectionBox") then
+            part.SelectionBox:Destroy()
         end
     end
 end
@@ -149,8 +149,8 @@ Mouse.KeyDown:Connect(function(k)
             enemy = FindNearestEnemy()
             CamlockState = true
             if enemy then
-                CreateForcefield(enemy) -- Use Forcefield for ESP effect
-                -- Get Display Name safely, fall back to username if unavailable
+                CreateOutline(enemy) -- Create the outline for ESP effect
+                -- Safely retrieve and display the Display Name or Username
                 local displayName = enemy.Parent:FindFirstChild("DisplayName") and enemy.Parent.DisplayName or enemy.Parent.Name
                 game.StarterGui:SetCore("SendNotification", {
                     Title = "Locked On",
@@ -159,7 +159,9 @@ Mouse.KeyDown:Connect(function(k)
                 })
             end
         else
-            RemoveForcefield(enemy) -- Remove the Forcefield ESP when unlocked
+            if enemy then
+                RemoveOutline(enemy) -- Remove the outline when Camlock is unlocked
+            end
             enemy = nil
             CamlockState = false
         end
@@ -199,7 +201,7 @@ TextButton.MouseButton1Click:Connect(function()
         CamlockState = true
         enemy = FindNearestEnemy()
         if enemy then
-            CreateForcefield(enemy)
+            CreateOutline(enemy) -- Create outline when Camlock is ON
             local displayName = enemy.Parent:FindFirstChild("DisplayName") and enemy.Parent.DisplayName or enemy.Parent.Name
             game.StarterGui:SetCore("SendNotification", {
                 Title = "Locked On",
@@ -210,10 +212,9 @@ TextButton.MouseButton1Click:Connect(function()
     else
         TextButton.Text = "Camlock OFF"
         CamlockState = false
-        enemy = nil
-        if dot then
-            dot:Destroy()
-            dot = nil
+        if enemy then
+            RemoveOutline(enemy) -- Remove outline when Camlock is OFF
+            enemy = nil
         end
     end
 end)
