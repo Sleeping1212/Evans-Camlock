@@ -3,11 +3,13 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local CamlockState = false
-local Prediction = 0.24664 -- Default Prediction
-local HorizontalPrediction = 0.24664
-local VerticalPrediction = 0.14
-local Smoothness = 0.85 -- Smoothness for Camlock only
-local TriggerbotSpeed = 1.5 -- New triggerbot enhancement factor
+local Prediction = 0.14664 -- Updated Default Prediction
+local HorizontalPrediction = 0.14664 -- Updated Horizontal Prediction
+local VerticalPrediction = 0.07 -- Updated Vertical Prediction
+local XPrediction = 0.14664 -- Updated X Prediction
+local YPrediction = 0.07 -- Updated Y Prediction
+local Smoothness = 0.9 -- Updated Smoothness for Camlock
+local TriggerbotSpeed = 1.75 -- Optimized triggerbot speed for enhanced performance
 
 local Locked = true
 getgenv().Key = "q"
@@ -56,7 +58,7 @@ local function GetPredictionValue()
     elseif ping < 130 then
         return 0.150
     else
-        return 0.24664 -- Default prediction
+        return 0.14664 -- Updated Default Prediction
     end
 end
 
