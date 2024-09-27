@@ -9,7 +9,7 @@ local VerticalPrediction = 0.07 -- Updated Vertical Prediction
 local XPrediction = 0.14664 -- Updated X Prediction
 local YPrediction = 0.07 -- Updated Y Prediction
 local Smoothness = 0.9 -- Updated Smoothness for Camlock
-local TriggerbotSpeed = 1.75 -- Optimized triggerbot speed for enhanced performance
+local TriggerbotSpeed = 2 -- Optimized triggerbot speed for enhanced performance
 
 local Locked = true
 getgenv().Key = "q"
